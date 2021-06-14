@@ -66,9 +66,9 @@ exports.editCashAmount = async (req, res, next) => {
       return res.status(400).json({ message: "cashType not found" });
     }
 
-    console.log(isThisCashTypeInDB.cashAmount, "isThisCashTypeInDB - cash");
+    // console.log(isThisCashTypeInDB.cashAmount, "isThisCashTypeInDB - cash");
     const sumCashAmount = +cashAmount + isThisCashTypeInDB.cashAmount;
-    console.log(sumCashAmount, "sumCashAmount");
+    // console.log(sumCashAmount, "sumCashAmount");
 
     const updateCashAmount = await CashInAtm.update(
       {

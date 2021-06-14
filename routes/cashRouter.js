@@ -4,6 +4,6 @@ const cashController = require("../controllers/cashController");
 
 cashRouter.get("/", cashController.getAllCash);
 cashRouter.post("/", cashController.creatCash);
-cashRouter.patch("/", cashController.editCashAmount);
+cashRouter.put("/", cashController.editCashAmount);
 
 module.exports = cashRouter;
