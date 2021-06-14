@@ -65,11 +65,9 @@ exports.createDeposit = async (req, res, next) => {
       return res.status(400).json({ message: "cannot deposit 0 bath" });
     }
     if (totalMoney % 100) {
-      return res
-        .status(400)
-        .json({
-          message: "cannot deposit this totalMoney; not receive coin and 20,50",
-        });
+      return res.status(400).json({
+        message: "cannot deposit this totalMoney; not receive coin and 20,50",
+      });
     }
 
     // หา balance เดิม เพื่อสร้าง balance ใหม่ที่จะทำการเพิ่ม/แก้ไข ลงDB
@@ -129,6 +127,7 @@ exports.createDeposit = async (req, res, next) => {
 
 exports.createWithdraw = async (req, res, next) => {
   try {
+    const { withdraw } = req.body;
   } catch (err) {
     next(err);
   }
