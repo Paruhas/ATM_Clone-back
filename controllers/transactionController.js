@@ -128,6 +128,16 @@ exports.createDeposit = async (req, res, next) => {
 exports.createWithdraw = async (req, res, next) => {
   try {
     const { withdraw } = req.body;
+
+    if (withdraw % 100) {
+      return res.status(400).json({
+        message: "cannot withdraw this moneyValues; not give coin and 20,50",
+      });
+    }
+
+    return;
+
+    return res.status(200).json({ message: "withdraw successful" });
   } catch (err) {
     next(err);
   }
