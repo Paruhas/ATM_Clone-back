@@ -145,6 +145,70 @@ exports.createWithdraw = async (req, res, next) => {
 
 exports.createTransfer = async (req, res, next) => {
   try {
+    const { transferValues, toUserId } = req.body;
+    const { id } = req.user;
+
+    if (id === +toUserId) {
+      return res.status(400).json({ message: "cannot transfer to your Id" });
+    }
+
+    const fromUser = await User.findOne({ where: { id: id } });
+
+    if (!fromUser) {
+      return res.status(400).json({ message: "User made transfer not found" });
+    }
+
+    const toUser = await User.findOne({ where: { id: toUserId } });
+
+    if (!toUser) {
+      return res
+        .status(400)
+        .json({ message: "User who will got transfer not found" });
+    }
+
+    console.log(fromUser.balance, "fromUser.balance");
+    console.log(transferValues, "transferValues");
+    const newFromBalance = +fromUser.balance - +transferValues;
+    console.log(newFromBalance, "newFromBalance");
+
+    if (newFromBalance < 0) {
+      return res
+        .status(400)
+        .json({ message: "your currentBalance is not enough" });
+    }
+
+    const newToBalance = +toUser.balance + +transferValues;
+    console.log(newToBalance, "newToBalance");
+
+    // throw Error;
+
+    const createTransferFromTransaction = await Transaction.create({
+      transactionType: "madeTransfer",
+      decrease: +transferValues,
+      balance: newFromBalance,
+      description: `made transfer to "${toUser.username}"`,
+      userId: id,
+    });
+
+    const createTransferToTransaction = await Transaction.create({
+      transactionType: "gotTransfer",
+      increase: +transferValues,
+      balance: newToBalance,
+      description: `got transfer from "${fromUser.username}"`,
+      userId: toUserId,
+    });
+
+    const updateUserFromBalance = await User.update(
+      { balance: newFromBalance },
+      { where: { id: id } }
+    );
+
+    const updateUserToBalance = await User.update(
+      { balance: newToBalance },
+      { where: { id: toUserId } }
+    );
+
+    return res.status(200).json({ message: "transfer successful" });
   } catch (err) {
     next(err);
   }
