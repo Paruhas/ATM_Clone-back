@@ -102,9 +102,6 @@ exports.createDeposit = async (req, res, next) => {
     const new1000 = newCashData[1000] + +newBody[1000];
     const new500 = newCashData[500] + +newBody[500];
     const new100 = newCashData[100] + +newBody[100];
-    console.log(new1000, "new1000");
-    console.log(new500, "new500");
-    console.log(new100, "new100");
 
     const updateAtmCash1000 = await CashInAtm.update(
       { cashAmount: new1000 },
@@ -204,6 +201,34 @@ exports.createWithdraw = async (req, res, next) => {
     const userUpdateBalance = await User.update(
       { balance: newBalance },
       { where: { id: req.user.id } }
+    );
+
+    // หา จำนวนเงิน เดิม เพื่อสร้าง จำนวนเงิน ใหม่ที่จะทำการแก้ไข ลงDB
+    const cashData = await CashInAtm.findAll();
+
+    const newCashData = cashData.reduce((acc, item) => {
+      return {
+        ...acc,
+        [item.cashType]: item.cashAmount,
+      };
+    }, {});
+
+    // HardCode
+    const new1000 = +newCashData[1000] - +countCash_1000;
+    const new500 = +newCashData[500] - +countCash_500;
+    const new100 = +newCashData[100] - +countCash_100;
+
+    const updateAtmCash1000 = await CashInAtm.update(
+      { cashAmount: new1000 },
+      { where: { cashType: "1000" } }
+    );
+    const updateAtmCash500 = await CashInAtm.update(
+      { cashAmount: new500 },
+      { where: { cashType: "500" } }
+    );
+    const updateAtmCash100 = await CashInAtm.update(
+      { cashAmount: new100 },
+      { where: { cashType: "100" } }
     );
 
     return res.status(201).json({
