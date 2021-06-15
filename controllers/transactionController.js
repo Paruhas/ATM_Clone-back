@@ -119,7 +119,9 @@ exports.createDeposit = async (req, res, next) => {
       { where: { cashType: "100" } }
     );
 
-    return res.status(200).json({ message: "deposit successful" });
+    return res
+      .status(200)
+      .json({ message: "deposit successful", deposits: totalMoney });
   } catch (err) {
     next(err);
   }
@@ -135,9 +137,82 @@ exports.createWithdraw = async (req, res, next) => {
       });
     }
 
-    return;
+    const userLastedBalance = await User.findOne({
+      where: { id: req.user.id },
+    });
 
-    return res.status(200).json({ message: "withdraw successful" });
+    if (!userLastedBalance) {
+      return res.status(400).json({ message: "user not found" });
+    }
+
+    if (+withdraw > +userLastedBalance.balance) {
+      return res.status(400).json({
+        message: "cannot withdraw ; withdraw amount > currentUserBalance",
+      });
+    }
+
+    let limit100 = await CashInAtm.findOne({ where: { cashType: "100" } });
+    let limit500 = await CashInAtm.findOne({ where: { cashType: "500" } });
+    let limit1000 = await CashInAtm.findOne({ where: { cashType: "1000" } });
+
+    let moneyUserWanted = +withdraw;
+
+    const totalCashInATM =
+      limit1000.cashAmount * limit1000.cashType +
+      limit500.cashAmount * limit500.cashType +
+      limit100.cashAmount * limit100.cashType;
+
+    if (totalCashInATM < +withdraw) {
+      return res
+        .status(400)
+        .json({ message: "not enough bankNote in this ATM" });
+    }
+
+    let countCash_1000 = 0;
+    let countCash_500 = 0;
+    let countCash_100 = 0;
+
+    while (moneyUserWanted >= 1000 && limit1000.cashAmount !== 0) {
+      moneyUserWanted = moneyUserWanted - 1000;
+      limit1000.cashAmount = limit1000.cashAmount - 1;
+      countCash_1000++;
+    }
+
+    while (moneyUserWanted >= 500 && limit500.cashAmount !== 0) {
+      moneyUserWanted = moneyUserWanted - 500;
+      limit500.cashAmount = limit500.cashAmount - 1;
+      countCash_500++;
+    }
+
+    while (moneyUserWanted >= 100 && limit100.cashAmount !== 0) {
+      moneyUserWanted = moneyUserWanted - 100;
+      limit100.cashAmount = limit100.cashAmount - 1;
+      countCash_100++;
+    }
+
+    // หา balance เดิม เพื่อสร้าง balance ใหม่ที่จะทำการเพิ่ม/แก้ไข ลงDB
+    // User อยู่ด้านบน
+    const newBalance = +userLastedBalance.balance - +withdraw;
+
+    const userCreateWithdrawTransaction = await Transaction.create({
+      transactionType: "withdraw",
+      decrease: +withdraw,
+      balance: newBalance,
+      userId: req.user.id,
+    });
+
+    const userUpdateBalance = await User.update(
+      { balance: newBalance },
+      { where: { id: req.user.id } }
+    );
+
+    return res.status(201).json({
+      message: "withdraw successful",
+      withdraw: withdraw,
+      countCash_1000,
+      countCash_500,
+      countCash_100,
+    });
   } catch (err) {
     next(err);
   }
@@ -166,10 +241,7 @@ exports.createTransfer = async (req, res, next) => {
         .json({ message: "User who will got transfer not found" });
     }
 
-    console.log(fromUser.balance, "fromUser.balance");
-    console.log(transferValues, "transferValues");
     const newFromBalance = +fromUser.balance - +transferValues;
-    console.log(newFromBalance, "newFromBalance");
 
     if (newFromBalance < 0) {
       return res
@@ -178,9 +250,6 @@ exports.createTransfer = async (req, res, next) => {
     }
 
     const newToBalance = +toUser.balance + +transferValues;
-    console.log(newToBalance, "newToBalance");
-
-    // throw Error;
 
     const createTransferFromTransaction = await Transaction.create({
       transactionType: "madeTransfer",
@@ -208,7 +277,11 @@ exports.createTransfer = async (req, res, next) => {
       { where: { id: toUserId } }
     );
 
-    return res.status(200).json({ message: "transfer successful" });
+    return res.status(201).json({
+      message: "transfer successful",
+      toUser: toUser.username,
+      amount: transferValues,
+    });
   } catch (err) {
     next(err);
   }
