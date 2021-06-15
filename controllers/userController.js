@@ -124,6 +124,11 @@ exports.login = async (req, res, next) => {
     if (!password || !password.trim()) {
       return res.status(400).json({ message: "password is required" });
     }
+    if (!passwordIsNumber.test(password)) {
+      return res
+        .status(400)
+        .json({ message: "this password is invalid format; digit only" });
+    }
 
     const loginUser = await User.findOne({
       where: {
