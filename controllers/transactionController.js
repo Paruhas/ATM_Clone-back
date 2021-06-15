@@ -159,10 +159,10 @@ exports.createWithdraw = async (req, res, next) => {
       limit500.cashAmount * limit500.cashType +
       limit100.cashAmount * limit100.cashType;
 
-    if (totalCashInATM < +withdraw) {
-      return res
-        .status(400)
-        .json({ message: "not enough bankNote in this ATM" });
+    if (moneyUserWanted > totalCashInATM) {
+      return res.status(400).json({
+        message: "not enough money in this ATM to match userWithdraw",
+      });
     }
 
     let countCash_1000 = 0;
@@ -185,6 +185,16 @@ exports.createWithdraw = async (req, res, next) => {
       moneyUserWanted = moneyUserWanted - 100;
       limit100.cashAmount = limit100.cashAmount - 1;
       countCash_100++;
+    }
+
+    console.log(totalCashInATM);
+    if (
+      countCash_1000 * 1000 + countCash_500 * 500 + countCash_100 * 100 !==
+      +withdraw
+    ) {
+      return res.status(400).json({
+        message: "not enough bankNote in this ATM to match userWithdraw",
+      });
     }
 
     // หา balance เดิม เพื่อสร้าง balance ใหม่ที่จะทำการเพิ่ม/แก้ไข ลงDB
