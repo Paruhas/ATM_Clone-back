@@ -34,13 +34,18 @@ exports.createDeposit = async (req, res, next) => {
       const hasThisCashTypeInDB = cashTypeForValidate.findIndex((item) => {
         return item === Object.keys(values)[0];
       });
+      console.log(Object.values(values)[0]);
       if (hasThisCashTypeInDB === -1) {
         return res
           .status(400)
           .json({ message: "cashType from req doesn't match cashType in DB" });
       }
-      if (!Object.values(values)[0] || !Object.values(values)[0].trim()) {
-        return res.status(400).json({ message: "deposit values is required" });
+      if (Object.values(values)[0] !== 0) {
+        if (!Object.values(values)[0] || !Object.values(values)[0].trim()) {
+          return res
+            .status(400)
+            .json({ message: "deposit values is required" });
+        }
       }
       if (!IsNumber.test(Object.values(values)[0])) {
         return res.status(400).json({ message: "deposit values be digit" });
@@ -259,6 +264,12 @@ exports.createTransfer = async (req, res, next) => {
 
     if (id === +toUserId) {
       return res.status(400).json({ message: "cannot transfer to your Id" });
+    }
+    if (!transferValues || !transferValues.trim()) {
+      return res.status(400).json({ message: "transferValues is required" });
+    }
+    if (transferValues <= 0) {
+      return res.status(400).json({ message: "transferValues must be int" });
     }
 
     const fromUser = await User.findOne({ where: { id: id } });
