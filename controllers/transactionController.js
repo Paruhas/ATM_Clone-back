@@ -187,7 +187,6 @@ exports.createWithdraw = async (req, res, next) => {
       countCash_100++;
     }
 
-    console.log(totalCashInATM);
     if (
       countCash_1000 * 1000 + countCash_500 * 500 + countCash_100 * 100 !==
       +withdraw
