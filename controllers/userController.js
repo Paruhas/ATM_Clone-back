@@ -118,6 +118,13 @@ exports.login = async (req, res, next) => {
   try {
     const { username, password } = req.body;
 
+    if (!username || !username.trim()) {
+      return res.status(400).json({ message: "username is required" });
+    }
+    if (!password || !password.trim()) {
+      return res.status(400).json({ message: "password is required" });
+    }
+
     const loginUser = await User.findOne({
       where: {
         username: username,
