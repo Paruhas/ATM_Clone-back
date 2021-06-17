@@ -9,6 +9,7 @@ exports.getTransactionByUserId = async (req, res, next) => {
 
     const userTransaction = await Transaction.findAll({
       where: { userId: id },
+      order: [["id", "DESC"]],
     });
 
     return res.status(200).json({ userTransaction: userTransaction });
